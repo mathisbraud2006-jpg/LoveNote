@@ -1,0 +1,355 @@
+
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Pacifico&display=swap');
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  #scene {
+    min-height: 600px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    background: linear-gradient(160deg, #ffe0f0 0%, #ffd6e8 40%, #e8d0ff 100%);
+    border-radius: 20px;
+    padding: 80px 16px 40px;
+    position: relative;
+    overflow: hidden;
+  }
+
+  #hearts-canvas { position: absolute; inset: 0; pointer-events: none; z-index: 0; }
+
+  .site-header {
+    position: absolute;
+    top: 0; left: 0; right: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+    padding: 12px 20px;
+    background: rgba(255,255,255,0.55);
+    border-bottom: 1.5px solid rgba(247,168,208,0.5);
+    backdrop-filter: blur(6px);
+    z-index: 2;
+    flex-wrap: wrap;
+  }
+
+  .site-logo {
+    width: 30px; height: 30px;
+    background: linear-gradient(135deg, #ff6fb7, #d63384);
+    border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    flex-shrink: 0;
+  }
+  .site-logo svg { width: 16px; height: 16px; }
+
+  .site-name {
+    font-family: 'Pacifico', 'Georgia', serif;
+    font-size: 18px; color: #d63384;
+    letter-spacing: 0.5px; text-shadow: 0 1px 0 #ffc8e0;
+    white-space: nowrap;
+  }
+
+  .site-tagline {
+    font-size: 11px; color: #c06090;
+    font-style: italic; letter-spacing: 0.3px; white-space: nowrap;
+  }
+
+  .card {
+    background: rgba(255,255,255,0.85);
+    border-radius: 24px;
+    border: 2.5px solid #f7a8d0;
+    box-shadow: 0 8px 40px rgba(220,80,140,0.13);
+    padding: 32px 32px 28px;
+    text-align: center;
+    max-width: 420px;
+    width: 100%;
+    position: relative;
+    z-index: 1;
+  }
+
+  .emoji-row { font-size: 32px; margin-bottom: 10px; letter-spacing: 6px; }
+
+  .question {
+    font-family: 'Pacifico', 'Georgia', serif;
+    font-size: clamp(19px, 4.5vw, 25px);
+    color: #d63384;
+    margin: 0 0 6px;
+    line-height: 1.35;
+    text-shadow: 1px 1px 0 #ffc8e0;
+    min-height: 68px;
+    display: flex; align-items: center; justify-content: center;
+  }
+
+  .sub {
+    font-size: 13px; color: #c06090;
+    margin-bottom: 10px; font-style: italic;
+    min-height: 34px;
+  }
+
+  .signature {
+    font-family: 'Pacifico', 'Georgia', serif;
+    font-size: 13px;
+    color: #e088b8;
+    margin-bottom: 18px;
+    letter-spacing: 0.3px;
+    opacity: 0.85;
+  }
+
+  .reroll-btn {
+    background: none;
+    border: 1.5px dashed #f7a8d0;
+    border-radius: 50px;
+    color: #c06090;
+    font-size: 12px;
+    padding: 5px 14px;
+    cursor: pointer;
+    margin-bottom: 18px;
+    transition: background 0.15s, color 0.15s;
+    font-style: italic;
+  }
+  .reroll-btn:hover { background: #fff0f7; color: #d63384; }
+
+  .btns {
+    display: flex; gap: 12px;
+    justify-content: center; align-items: center;
+    flex-wrap: wrap;
+  }
+
+  #btn-yes {
+    background: linear-gradient(135deg, #ff6fb7 0%, #ff3d8a 100%);
+    color: white; border: none; border-radius: 50px;
+    padding: 13px 32px;
+    font-size: clamp(15px, 4vw, 18px); font-weight: 700;
+    cursor: pointer;
+    box-shadow: 0 4px 18px rgba(255,80,140,0.35);
+    transition: transform 0.12s, box-shadow 0.12s;
+    letter-spacing: 0.5px; touch-action: manipulation;
+  }
+  #btn-yes:hover { transform: scale(1.08); box-shadow: 0 6px 28px rgba(255,80,140,0.5); }
+  #btn-yes:active { transform: scale(0.96); }
+
+  #btn-no {
+    background: white; color: #d63384;
+    border: 2px solid #f7a8d0; border-radius: 50px;
+    padding: 13px 32px;
+    font-size: clamp(15px, 4vw, 18px); font-weight: 700;
+    cursor: pointer;
+    box-shadow: 0 2px 10px rgba(200,80,140,0.12);
+    letter-spacing: 0.5px; user-select: none; touch-action: manipulation;
+  }
+  #btn-no.flying { position: fixed; z-index: 9999; transition: none; }
+
+  #win {
+    display: none; flex-direction: column; align-items: center;
+    animation: popin 0.5s cubic-bezier(.3,1.6,.5,1) both;
+    position: relative; z-index: 1; text-align: center; padding: 0 16px;
+  }
+  @keyframes popin {
+    from { transform: scale(0.4); opacity: 0; }
+    to   { transform: scale(1);   opacity: 1; }
+  }
+  .win-emoji { font-size: 52px; margin-bottom: 12px; }
+  .win-text { font-family: 'Pacifico', serif; font-size: clamp(20px,5vw,24px); color: #d63384; margin: 0 0 8px; }
+  .win-sub { font-size: 15px; color: #c06090; margin-bottom: 10px; }
+  .win-sig { font-family: 'Pacifico', serif; font-size: 13px; color: #e088b8; opacity: 0.85; }
+
+  .fade-text { animation: fadeSwap 0.35s ease both; }
+  @keyframes fadeSwap {
+    0%   { opacity: 0; transform: translateY(6px); }
+    100% { opacity: 1; transform: translateY(0); }
+  }
+
+  .confetti-piece {
+    position: absolute; border-radius: 2px;
+    animation: confettiFall linear forwards;
+    pointer-events: none; z-index: 10;
+  }
+  @keyframes confettiFall {
+    0%   { transform: translateY(-20px) rotate(0deg); opacity: 1; }
+    100% { transform: translateY(620px) rotate(720deg); opacity: 0; }
+  }
+
+  @media (max-width: 480px) {
+    #scene { padding: 72px 12px 28px; min-height: 540px; }
+    .card { padding: 24px 16px 20px; border-radius: 18px; }
+    .site-tagline { display: none; }
+    .emoji-row { font-size: 28px; letter-spacing: 4px; }
+  }
+</style>
+
+<div id="scene">
+  <canvas id="hearts-canvas"></canvas>
+
+  <div class="site-header">
+    <div class="site-logo">
+      <svg viewBox="0 0 24 24" fill="white" xmlns="http://www.w3.org/2000/svg">
+        <path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/>
+      </svg>
+    </div>
+    <span class="site-name">LoveNote</span>
+    <span class="site-tagline">— because some questions deserve a special delivery</span>
+  </div>
+
+  <div class="card" id="main-card">
+    <div class="emoji-row" id="emoji-row">🌹💌🥂</div>
+    <p class="question" id="question-text">Will you go on a date with me?</p>
+    <p class="sub" id="sub-text">Think carefully… there's only one right answer 💖</p>
+    <p class="signature">— Mathis B. 🖊️</p>
+    <button class="reroll-btn" onclick="reroll()">✨ try another line</button>
+    <div class="btns">
+      <button id="btn-yes" onclick="sayYes()">Yes! 💕</button>
+      <button id="btn-no">No 😐</button>
+    </div>
+  </div>
+
+  <div id="win">
+    <div class="win-emoji" id="win-emoji">🥳🎉💖</div>
+    <p class="win-text" id="win-text">Yay!! It's a date!!</p>
+    <p class="win-sub" id="win-sub">I knew you'd say yes~ See you soon! 🌹</p>
+    <p class="win-sig">— Mathis B., very relieved 😅</p>
+  </div>
+</div>
+
+<script>
+const lines = [
+  { emoji:"🌹💌🥂", q:"Will you go on a date with me?", sub:"Think carefully… there's only one right answer 💖", winEmoji:"🥳🎉💖", winText:"Yay!! It's a date!!", winSub:"I knew you'd say yes~ See you soon! 🌹" },
+  { emoji:"🧠💅✨", q:"Scientifically speaking, you should say yes.", sub:"I consulted the data. The data is me. 📊", winEmoji:"🔬💖🎉", winText:"Science wins again!!", winSub:"Peer-reviewed and everything. Let's go! 🧪" },
+  { emoji:"🐶👀💘", q:"My dog already thinks you're amazing.", sub:"And honestly? My dog has never been wrong. 🐾", winEmoji:"🐶🎊💕", winText:"The dog approves!!", winSub:"He's already picking the restaurant. 🦴" },
+  { emoji:"🍕❤️🫵", q:"I'll let you pick the restaurant.", sub:"Yes, even that fancy one. Yes, I'm serious. 😅", winEmoji:"🍽️🥂✨", winText:"Best decision ever!!", winSub:"Start browsing menus immediately. 📱" },
+  { emoji:"🌙⭐💫", q:"The stars literally aligned for this moment.", sub:"I checked. Mercury isn't even in retrograde. 🔭", winEmoji:"🌟💞🎆", winText:"The universe is thrilled!!", winSub:"Jupiter is literally clapping right now. 🪐" },
+  { emoji:"😤💪💖", q:"I've been practicing this ask for 3 days.", sub:"Please don't make those 3 days a waste. 🙏", winEmoji:"🏆💖😭", winText:"All that practice paid off!!", winSub:"I'm going to cry. Respectfully. 😭" },
+  { emoji:"🎲🎯💘", q:"Statistically, this will be a great date.", sub:"Sample size: my gut feeling. Confidence: 100%. 📈", winEmoji:"📊💕🎉", winText:"Hypothesis confirmed!!", winSub:"Publishing the findings immediately. 🗞️" },
+  { emoji:"☕🧇🌸", q:"I promise I won't talk about my podcast.", sub:"…I don't have a podcast. That's the joke. 🎙️", winEmoji:"😂💖✨", winText:"You laughed. I saw it!!", winSub:"Laughing together = already going great. ☕" },
+  { emoji:"🚩🏳️💝", q:"I Googled 'how to ask someone out'.", sub:"This was step 4. Step 5 is you saying yes. 📋", winEmoji:"✅💕🥳", winText:"Step 5 complete!!", winSub:"The tutorial didn't cover how happy I'd be. 🌈" },
+  { emoji:"🧸🍦😳", q:"Okay but hear me out… just one date.", sub:"I'll even pretend to be normal. Temporarily. 🫡", winEmoji:"🎭💖🎉", winText:"Normal mode: activated!!", winSub:"Holding it together. For you. 😤" },
+  { emoji:"🦋😮‍💨💌", q:"My heart said yes before I even asked.", sub:"At this point I'm just the messenger. 📬", winEmoji:"💌💖🦋", winText:"Message delivered!!", winSub:"Heart is now doing backflips. 🤸" },
+  { emoji:"🍿🎬💕", q:"We can watch whatever you want.", sub:"Even that 4-hour movie. Fine. I'm fine. 😬", winEmoji:"🎬🍿💖", winText:"Popcorn: already popping!!", winSub:"Emotionally prepared for the 4-hour runtime. ⏱️" },
+  { emoji:"🧋🤙😎", q:"I'll buy the boba. Both of them. No hesitation.", sub:"This is what peak romance looks like. 🫧", winEmoji:"🧋💖🎊", winText:"Boba secured!!", winSub:"Two straws. Very cinematic. 🎥" },
+  { emoji:"🕵️📜💘", q:"I have compiled a list of reasons you should say yes.", sub:"It's 47 pages. Single-spaced. 📄", winEmoji:"📜✅💕", winText:"Appendix B was clearly convincing!!", winSub:"I'll autograph your copy. 🖊️" },
+  { emoji:"🌮🔥😍", q:"I make really good tacos, just saying.", sub:"This is relevant information. Weigh it carefully. 🌮", winEmoji:"🌮🎉💖", winText:"Taco date confirmed!!", winSub:"Salsa level: medium. Romance level: max. 🔥" },
+  { emoji:"🪴😐💌", q:"I asked my plant. She said go for it.", sub:"Her name is Gerald. She's very wise. 🌿", winEmoji:"🪴💕🥳", winText:"Gerald is overjoyed!!", winSub:"She's been rooting for this. Literally. 🌱" },
+  { emoji:"😴💭💘", q:"I literally dreamed about asking you this.", sub:"So technically, dream-me already asked. This is a formality. 🌙", winEmoji:"💭💖✨", winText:"Dream unlocked in real life!!", winSub:"Reality is better anyway. 🌅" },
+  { emoji:"🏃💨❤️", q:"The 'No' button keeps running away.", sub:"Even it knows what the right answer is. 👀", winEmoji:"🏃💖🎉", winText:"The button had good taste!!", winSub:"Even the UI ships us. 🖥️" },
+  { emoji:"🎻😩💝", q:"I have the world's tiniest violin ready if you say no.", sub:"It's very sad. Please spare us both. 🎻", winEmoji:"🎻💖🎊", winText:"The violin stays in its case!!", winSub:"Today is a good day for everyone. 🌞" },
+  { emoji:"🧩🫶✨", q:"We'd just… fit, you know?", sub:"Like a two-piece puzzle. Or matching socks. 🧦", winEmoji:"🧩💕🎉", winText:"Perfect fit confirmed!!", winSub:"Matching socks energy, all day. 🧦" },
+  { emoji:"📱😬💌", q:"I typed and deleted this 11 times.", sub:"The 12th attempt is always the charm. Probably. 🤞", winEmoji:"📱💖✅", winText:"Attempt #12: legendary!!", winSub:"Deleting those 11 drafts was worth it. 🗑️" },
+  { emoji:"🎤🫵💘", q:"This is my formal Ted Talk: go on a date with me.", sub:"Slide 1 of 1. Very concise. 👔", winEmoji:"🎤🎉💖", winText:"Standing ovation!!", winSub:"Best Ted Talk in history. Officially. 👏" },
+  { emoji:"🛸👽💕", q:"Even aliens would think this is a good idea.", sub:"They've been observing. They're rooting for us. 🌌", winEmoji:"🛸💖🎆", winText:"The cosmos approves!!", winSub:"Intergalactic romance: confirmed. 🌠" },
+  { emoji:"🍰🥺💝", q:"Life is short. Eat cake. Go on dates.", sub:"This is a two-part philosophy. Please follow both. 🎂", winEmoji:"🍰💕🎊", winText:"Philosophy successfully applied!!", winSub:"Cake to follow. I promise. 🎂" },
+];
+
+let current = 0;
+
+function reroll() {
+  let next;
+  do { next = Math.floor(Math.random() * lines.length); } while (next === current);
+  current = next;
+  const l = lines[current];
+  ['emoji-row','question-text','sub-text'].forEach(id => {
+    const el = document.getElementById(id);
+    el.classList.remove('fade-text');
+    void el.offsetWidth;
+    el.classList.add('fade-text');
+  });
+  document.getElementById('emoji-row').textContent    = l.emoji;
+  document.getElementById('question-text').textContent = l.q;
+  document.getElementById('sub-text').textContent      = l.sub;
+}
+
+function sayYes() {
+  const l = lines[current];
+  document.getElementById('win-emoji').textContent = l.winEmoji;
+  document.getElementById('win-text').textContent  = l.winText;
+  document.getElementById('win-sub').textContent   = l.winSub;
+  document.getElementById('main-card').style.display = 'none';
+  document.getElementById('btn-no').style.display    = 'none';
+  const win = document.getElementById('win');
+  win.style.display = 'flex';
+  spawnConfetti();
+}
+
+const noBtn = document.getElementById('btn-no');
+const scene = document.getElementById('scene');
+let hasFlown = false;
+
+function makeItFly() {
+  if (!hasFlown) {
+    hasFlown = true;
+    const r = noBtn.getBoundingClientRect();
+    noBtn.style.left  = r.left + 'px';
+    noBtn.style.top   = r.top  + 'px';
+    noBtn.style.width = r.width + 'px';
+    noBtn.classList.add('flying');
+  }
+  placeNoBtn();
+}
+
+function placeNoBtn() {
+  const sr = scene.getBoundingClientRect();
+  const m=16, bw=noBtn.offsetWidth||120, bh=noBtn.offsetHeight||50;
+  noBtn.style.left = (Math.random()*(sr.right-bw-m-(sr.left+m))+sr.left+m)+'px';
+  noBtn.style.top  = (Math.random()*(sr.bottom-bh-m-(sr.top+m))+sr.top+m)+'px';
+}
+
+noBtn.addEventListener('mouseenter', makeItFly);
+noBtn.addEventListener('touchstart', e => { e.preventDefault(); makeItFly(); });
+
+function spawnConfetti() {
+  const cols=['#ff6fb7','#ff3d8a','#ffd700','#c084fc','#60d394','#ff9f43'];
+  for(let i=0;i<60;i++){
+    setTimeout(()=>{
+      const el=document.createElement('div');
+      el.className='confetti-piece';
+      el.style.cssText=`left:${Math.random()*100}%;top:0;background:${cols[Math.random()*cols.length|0]};width:${8+Math.random()*8}px;height:${8+Math.random()*8}px;animation-duration:${1.5+Math.random()*2}s`;
+      scene.appendChild(el);
+      setTimeout(()=>el.remove(),4000);
+    },i*40);
+  }
+}
+
+const canvas=document.getElementById('hearts-canvas');
+const ctx=canvas.getContext('2d');
+function resize(){canvas.width=scene.offsetWidth;canvas.height=scene.offsetHeight;}
+resize();
+window.addEventListener('resize',resize);
+
+const hColors=['rgba(214,51,132,','rgba(255,111,183,','rgba(192,96,144,','rgba(255,61,138,','rgba(180,80,160,'];
+const hearts=Array.from({length:18},()=>({
+  x:Math.random(),y:Math.random(),
+  size:6+Math.random()*14,opacity:0.06+Math.random()*0.18,
+  speed:0.00015+Math.random()*0.0003,drift:(Math.random()-.5)*0.00025,
+  wobble:Math.random()*Math.PI*2,wobbleSpeed:0.005+Math.random()*0.01,
+  wobbleAmp:0.012+Math.random()*0.025,
+  color:hColors[Math.random()*hColors.length|0],
+  spin:(Math.random()-.5)*0.008,angle:Math.random()*Math.PI*2,
+}));
+
+function heartPath(cx,x,y,s){
+  cx.save();cx.translate(x,y);cx.scale(s/10,s/10);
+  cx.beginPath();cx.moveTo(0,-3);
+  cx.bezierCurveTo(-5,-8,-10,-3,-10,2);cx.bezierCurveTo(-10,7,-5,11,0,16);
+  cx.bezierCurveTo(5,11,10,7,10,2);cx.bezierCurveTo(10,-3,5,-8,0,-3);
+  cx.closePath();cx.restore();
+}
+
+(function draw(){
+  const W=canvas.width,H=canvas.height;
+  ctx.clearRect(0,0,W,H);
+  for(const h of hearts){
+    h.y-=h.speed;h.wobble+=h.wobbleSpeed;
+    h.x+=Math.sin(h.wobble)*h.wobbleAmp*0.03+h.drift;
+    h.angle+=h.spin;
+    if(h.y<-0.12){h.y=1.08;h.x=Math.random();}
+    if(h.x<-0.1)h.x=1.1;if(h.x>1.1)h.x=-0.1;
+    ctx.save();
+    const px=h.x*W,py=h.y*H;
+    ctx.translate(px,py);ctx.rotate(h.angle);ctx.translate(-px,-py);
+    heartPath(ctx,px,py,h.size);
+    ctx.fillStyle=h.color+h.opacity+')';
+    ctx.fill();ctx.restore();
+  }
+  requestAnimationFrame(draw);
+})();
+
+reroll();
+</script>
